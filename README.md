@@ -1,53 +1,61 @@
+<p align="center">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT License" /></a>
+  <a href="https://code.claude.com/docs/en/plugins"><img src="https://img.shields.io/badge/Claude%20Code-plugin-orange.svg" alt="Claude Code Plugin" /></a>
+  <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/version-0.0.1-green.svg" alt="Version 0.0.1" /></a>
+  <img src="https://img.shields.io/badge/Claude-Pro%20%7C%20Max-blueviolet.svg" alt="Claude Pro/Max Compatible" />
+  <img src="https://img.shields.io/badge/status-early%20alpha-red.svg" alt="Early Alpha" />
+</p>
+
 # claude-code-homeassistant-hermit
+
+A [`claude-code-hermit`](https://github.com/gtapps/claude-code-hermit) plugin for autonomous Home Assistant management — skills, safety hooks, subagents, and a Python CLI for entity control.
 
 > **Early alpha — this plugin controls real home devices. Review every action before confirming.**
 
-A [`claude-code-hermit`](https://github.com/gtapps/claude-code-hermit) plugin for autonomous Home Assistant management. Ships HA-aware skills, subagents, and a safety hook. Pairs with the `ha-agent-lab` Python CLI for bulk REST operations, entity policy enforcement, YAML simulation, and safe apply.
-
-All MCP actuation calls are pre-screened by `hooks/mcp-safety-gate.py` before reaching Home Assistant. Locks, alarm panels, and security devices are blocked by policy — blocked operations become proposals for human review.
-
-## What this plugin provides
-
-| | |
-|---|---|
-| **Skills** | `ha-boot`, `ha-house-status`, `ha-morning-brief`, `ha-refresh-context`, `ha-build-automation`, `ha-apply-change`, `ha-analyze-patterns`, `ha-hatch` |
-| **Subagents** | `ha-safety-reviewer`, `ha-automation-builder`, `ha-pattern-analyst` |
-| **Safety hook** | MCP actuation calls are gated by `hooks/mcp-safety-gate.py` before reaching HA |
-| **Python CLI** | `ha-agent-lab` — REST client, entity safety policy, YAML simulation, safe apply |
-
-## Prerequisites
-
-- [Claude Code](https://claude.ai/code) installed
-- Python ≥ 3.12 with `pip install --user PyYAML python-dotenv`
-- A running [Home Assistant](https://www.home-assistant.io/) instance
-- The [claude-code-hermit](https://github.com/gtapps/claude-code-hermit) core plugin
-
-## Setup
-
-### 1. Add marketplaces and install plugins
+Three commands to a running HA hermit:
 
 ```
-claude marketplace add gtapps/claude-code-hermit
-claude marketplace add gtapps/claude-code-homeassistant-hermit
-claude plugin install claude-code-hermit@claude-code-hermit
-claude plugin install claude-code-homeassistant-hermit@claude-code-homeassistant-hermit
+claude plugin install claude-code-homeassistant-hermit@claude-code-homeassistant-hermit --scope project
+/claude-code-hermit:hatch
+/claude-code-homeassistant-hermit:ha-boot
 ```
 
-Or, if using this repo directly as a local plugin:
+---
 
-```
-claude plugin add-local /path/to/claude-code-homeassistant-hermit
-```
+## What It Does
 
-### 2. Install Python runtime dependencies
+- **MCP-first live operations** — talks to Home Assistant through its [MCP Server](https://www.home-assistant.io/integrations/mcp_server/) for real-time status, light/cover/fan control, and context queries.
+
+- **Safety gate on all actuation** — every MCP call matching `mcp__homeassistant__Hass*` is pre-screened by `hooks/mcp-safety-gate.py`. Locks, alarm panels, and security devices are blocked by policy. Blocked operations become proposals for human review.
+
+- **Python CLI for bulk work** — `ha-agent-lab` handles entity inventory refresh, YAML simulation, policy checks, and safe apply. Skills call it automatically.
+
+- **Hermit-integrated sessions** — inherits session discipline, proposals, cost tracking, and memory from `claude-code-hermit`. Start with `/ha-boot`, close with `/session-close`.
+
+- **Auto-configured permissions** — ships a `settings.json` that pre-approves safe CLI commands and MCP read tools while blocking destructive operations.
+
+---
+
+## Quick Start
+
+> **Requirements:** [Claude Code](https://code.claude.com) v2.1.98+, Python ≥ 3.12, a running [Home Assistant](https://www.home-assistant.io/) instance, and the [claude-code-hermit](https://github.com/gtapps/claude-code-hermit) core plugin.
+
+### 1. Install
 
 ```bash
+cd /path/to/your/project
+claude plugin marketplace add gtapps/claude-code-hermit
+claude plugin marketplace add gtapps/claude-code-homeassistant-hermit
+claude plugin install claude-code-hermit@claude-code-hermit --scope project
+claude plugin install claude-code-homeassistant-hermit@claude-code-homeassistant-hermit --scope project
 pip install --user PyYAML python-dotenv
 ```
 
-### 3. Set up your environment file
+> **Local development?** Use `claude --plugin-dir /path/to/claude-code-homeassistant-hermit` to test without installing.
 
-In your project directory:
+### 2. Configure
+
+Create your environment file in the project directory:
 
 ```bash
 cp .env.example .env
@@ -62,14 +70,7 @@ HOMEASSISTANT_TOKEN=<your long-lived access token>
 
 Never commit `.env` — it is gitignored.
 
-### 4. Configure Home Assistant MCP Server
-
-In Home Assistant:
-
-1. Go to **Settings → Devices & Services → Add Integration**
-2. Search for **"Model Context Protocol Server"** and enable it
-
-Then register it in Claude Code under the canonical name `homeassistant`:
+Then register the HA MCP Server in Claude Code under the canonical name `homeassistant`:
 
 ```bash
 claude mcp add-json homeassistant '{
@@ -81,27 +82,20 @@ claude mcp add-json homeassistant '{
 
 > **Name matters**: skills and the safety hook expect MCP tool IDs in the form `mcp__homeassistant__*`. If you register under a different name, update `hooks/hooks.json` accordingly.
 
-See the [official HA MCP Server docs](https://www.home-assistant.io/integrations/mcp_server/) for details.
+In Home Assistant, enable the MCP Server integration: **Settings → Devices & Services → Add Integration → Model Context Protocol Server**. See the [official docs](https://www.home-assistant.io/integrations/mcp_server/) for details.
 
-### 5. Hatch core hermit and HA layer
-
-In Claude Code, open your project and run:
+### 3. Initialize
 
 ```
 /claude-code-hermit:hatch
-```
-
-Then:
-
-```
 /claude-code-homeassistant-hermit:ha-hatch
 ```
 
-This verifies your `.env`, walks you through MCP setup, updates `CLAUDE.md`, and confirms connectivity.
+`ha-hatch` verifies your `.env`, walks you through MCP setup, updates `CLAUDE.md`, and confirms connectivity.
 
-### 6. Verify
+Verify with `/mcp` — confirm `homeassistant` is connected.
 
-Run `/mcp` inside Claude Code and confirm `homeassistant` is connected.
+---
 
 ## Usage
 
@@ -111,32 +105,20 @@ Start every session with:
 /claude-code-homeassistant-hermit:ha-boot
 ```
 
-Then use skills as needed:
-
 | Skill | Purpose |
 |-------|---------|
-| `/claude-code-homeassistant-hermit:ha-house-status` | Live house status snapshot |
-| `/claude-code-homeassistant-hermit:ha-morning-brief` | Daily brief — presence, energy, alerts, proposals |
-| `/claude-code-homeassistant-hermit:ha-refresh-context` | Fetch and normalize full HA entity inventory |
-| `/claude-code-homeassistant-hermit:ha-build-automation` | Draft and validate an automation YAML |
-| `/claude-code-homeassistant-hermit:ha-apply-change` | Apply validated YAML with safety checks |
-| `/claude-code-homeassistant-hermit:ha-analyze-patterns` | Identify automation opportunities from history data |
+| `ha-house-status` | Live house status snapshot |
+| `ha-morning-brief` | Daily brief — presence, energy, alerts, proposals |
+| `ha-refresh-context` | Fetch and normalize full HA entity inventory |
+| `ha-build-automation` | Draft and validate an automation YAML |
+| `ha-apply-change` | Apply validated YAML with safety checks |
+| `ha-analyze-patterns` | Identify automation opportunities from history data |
 
-## CLI
-
-The `ha-agent-lab` CLI is invoked by skills automatically via `${CLAUDE_PLUGIN_ROOT}/bin/ha-agent-lab`. You can also run it directly from the plugin directory:
-
-```bash
-${CLAUDE_PLUGIN_ROOT}/bin/ha-agent-lab ha refresh-context
-${CLAUDE_PLUGIN_ROOT}/bin/ha-agent-lab ha simulate <artifact>
-${CLAUDE_PLUGIN_ROOT}/bin/ha-agent-lab ha validate-apply <artifact> --reload automation
-${CLAUDE_PLUGIN_ROOT}/bin/ha-agent-lab ha policy-check <target>
-${CLAUDE_PLUGIN_ROOT}/bin/ha-agent-lab boot status --probe
-```
+All skills are namespaced: `/claude-code-homeassistant-hermit:ha-*`.
 
 ## Safety
 
-The agent never autonomously actuates locks, alarm panels, or security-related covers/buttons/switches. All MCP actuation calls matching `mcp__homeassistant__Hass*` are pre-checked by `hooks/mcp-safety-gate.py` against `src/ha_agent_lab/policy.py`. Calls targeting unresolvable entities (area-only or device-only targets) are blocked by default. Blocked operations become proposals for human review.
+Every MCP actuation call is pre-checked by `hooks/mcp-safety-gate.py` against `src/ha_agent_lab/policy.py`. Calls targeting unresolvable entities (area-only or device-only targets) are blocked by default. Blocked operations become proposals for human review.
 
 **Policy overrides** (add to `.env`, see `.env.example`):
 
@@ -146,17 +128,32 @@ The agent never autonomously actuates locks, alarm panels, or security-related c
 | `HA_EXTRA_SENSITIVE_DOMAINS=vacuum,...` | Block additional domains entirely. |
 | `HA_EXTRA_SENSITIVE_KEYWORDS=pool,...` | Block extra keywords in conditionally-sensitive domains. |
 
+## CLI
+
+Skills invoke `ha-agent-lab` automatically via `${CLAUDE_PLUGIN_ROOT}/bin/ha-agent-lab`. You can also run it directly:
+
+```bash
+${CLAUDE_PLUGIN_ROOT}/bin/ha-agent-lab ha refresh-context
+${CLAUDE_PLUGIN_ROOT}/bin/ha-agent-lab ha simulate <artifact>
+${CLAUDE_PLUGIN_ROOT}/bin/ha-agent-lab ha validate-apply <artifact> --reload automation
+${CLAUDE_PLUGIN_ROOT}/bin/ha-agent-lab ha policy-check <target>
+${CLAUDE_PLUGIN_ROOT}/bin/ha-agent-lab boot status --probe
+```
+
 ## Architecture
 
 ```
 claude-code-homeassistant-hermit (this plugin)
-  ├── skills/          HA workflow skills
-  ├── agents/          HA subagents
-  ├── hooks/           Safety gate (mcp-safety-gate.py) + hooks.json
-  ├── state-templates/ CLAUDE-APPEND.md (injected by ha-hatch)
-  └── src/ha_agent_lab/  Python CLI (REST client, policy, simulation, apply)
+  ├── skills/            HA workflow skills (8)
+  ├── agents/            HA subagents (3)
+  ├── hooks/             Safety gate (mcp-safety-gate.py) + hooks.json
+  ├── bin/               ha-agent-lab CLI
+  ├── src/ha_agent_lab/  Python package (REST client, policy, simulation, apply)
+  ├── settings.json      Auto-configured permissions
+  ├── state-templates/   CLAUDE-APPEND.md (injected by ha-hatch)
+  └── tests/             Hook and policy tests
 
-claude-code-hermit (core, required)
+claude-code-hermit (core, required ≥ 1.0.0)
   └── Session lifecycle, proposals, cost tracking, memory
 ```
 
