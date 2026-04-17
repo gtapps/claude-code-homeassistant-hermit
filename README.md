@@ -12,12 +12,19 @@ A [`claude-code-hermit`](https://github.com/gtapps/claude-code-hermit) plugin fo
 
 > **Early alpha — this plugin controls real home devices. Review every action before confirming.**
 
-Three commands to a running HA hermit:
+Five commands to a running HA hermit:
 
 ```
-claude plugin install claude-code-homeassistant-hermit@claude-code-homeassistant-hermit --scope project
-/claude-code-hermit:hatch
-/claude-code-homeassistant-hermit:ha-boot
+# Install core first
+claude plugin marketplace add gtapps/claude-code-hermit
+claude plugin install claude-code-hermit --scope project
+
+# Then install the dev plugin
+claude plugin marketplace add gtapps/claude-code-dev-hermit
+claude plugin marketplace add gtapps/claude-code-homeassistant-hermit
+
+# Initialize
+/claude-code-homeassistant-hermit:ha-hatch
 ```
 
 ---
