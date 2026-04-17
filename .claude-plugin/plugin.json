@@ -1,0 +1,13 @@
+{
+  "name": "claude-code-homeassistant-hermit",
+  "version": "0.0.1",
+  "description": "Home Assistant autonomous agent conventions, skills, agents, and safety hook for claude-code-hermit",
+  "author": {
+    "name": "gtapps",
+    "url": "https://github.com/gtapps"
+  },
+  "repository": "https://github.com/gtapps/claude-code-homeassistant-hermit",
+  "homepage": "https://github.com/gtapps/claude-code-homeassistant-hermit#readme",
+  "license": "MIT",
+  "keywords": ["home-assistant", "automation", "mcp", "gtapps"]
+}
