@@ -29,12 +29,22 @@ Read `_hermit_versions["claude-code-homeassistant-hermit"]` from `config.json`. 
 
 Check that `.env` exists at the project root and contains `HOMEASSISTANT_TOKEN` and `HOMEASSISTANT_LOCAL_URL`.
 
-- **If `.env` is missing or incomplete**: stop and tell the user:
-  ```
-  Please set up your .env file first:
-    cp .env.example .env
-  Then fill in HOMEASSISTANT_TOKEN and HOMEASSISTANT_LOCAL_URL and re-run this hatch.
-  ```
+- **If `.env` is missing or incomplete**:
+  1. Tell the user:
+     ```
+     .env is missing or incomplete. Please create it at the project root:
+
+       cp .env.example .env
+
+     Then fill in:
+       HOMEASSISTANT_LOCAL_URL=http://homeassistant.local:8123
+       HOMEASSISTANT_TOKEN=<your long-lived access token>
+
+     Long-Lived Access Tokens: Home Assistant → Profile → Long-Lived Access Tokens.
+     ```
+  2. `AskUserQuestion`: "When your `.env` is ready, type **done** to continue (or **abort** to stop)."
+     - **done** → re-check `.env`. If still missing/incomplete, repeat from step 1. If valid, proceed.
+     - **abort** → stop.
   Do not write or modify `.env` — it is the user's responsibility.
 
 - **If `.env` is present and has both required keys**: proceed.
@@ -101,7 +111,7 @@ Alternative: if you prefer user-scope registration (available outside this proje
 
 Run `${CLAUDE_PLUGIN_ROOT}/bin/ha-agent-lab boot status --probe` and present the result. If it fails:
 
-- Missing deps → re-run §4 (re-invoke ha-hatch) to create `.venv` and install deps.
+- Missing deps → repeat the §4 venv install steps inline (create `.venv`, pip install) without exiting or re-invoking ha-hatch.
 - Connection refused → check `HOMEASSISTANT_LOCAL_URL` in `.env`.
 - Auth error → check `HOMEASSISTANT_TOKEN`.
 
@@ -135,7 +145,13 @@ ha-hatch complete
   ✓  config.json stamped v<version>
 
 Manual steps remaining:
-  - Enable 'mcp_server' integration in Home Assistant (if not done)
+  - Enable 'Model Context Protocol Server' integration in Home Assistant (if not done)
+    Settings → Devices & Services → Add Integration → search "MCP"
   - Restart Claude Code and approve the 'homeassistant' server on first use
   - Run /mcp to confirm 'homeassistant' is connected
+  - Run /claude-code-homeassistant-hermit:ha-refresh-context to populate the initial context snapshot
+
+Always-on runtime (pick one):
+  - Docker (recommended): /claude-code-hermit:docker-setup
+  - Direct:               /claude-code-hermit:channel-setup  (if not using Docker)
 ```
