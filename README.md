@@ -20,8 +20,8 @@ claude plugin marketplace add gtapps/claude-code-hermit
 claude plugin install claude-code-hermit --scope project
 
 # Then install the dev plugin
-claude plugin marketplace add gtapps/claude-code-dev-hermit
 claude plugin marketplace add gtapps/claude-code-homeassistant-hermit
+claude plugin install claude-code-homeassistant-hermit --scope project
 
 # Initialize
 /claude-code-homeassistant-hermit:ha-hatch
@@ -77,18 +77,6 @@ HOMEASSISTANT_TOKEN=<your long-lived access token>
 
 Never commit `.env` — it is gitignored.
 
-Then register the HA MCP Server in Claude Code under the canonical name `homeassistant`:
-
-```bash
-claude mcp add-json homeassistant '{
-  "type": "http",
-  "url": "https://<your_home_assistant_url>/api/mcp",
-  "headers": { "Authorization": "Bearer <YOUR_TOKEN>" }
-}'
-```
-
-> **Name matters**: skills and the safety hook expect MCP tool IDs in the form `mcp__homeassistant__*`. If you register under a different name, update `hooks/hooks.json` accordingly.
-
 In Home Assistant, enable the MCP Server integration: **Settings → Devices & Services → Add Integration → Model Context Protocol Server**. See the [official docs](https://www.home-assistant.io/integrations/mcp_server/) for details.
 
 ### 3. Initialize
@@ -98,9 +86,11 @@ In Home Assistant, enable the MCP Server integration: **Settings → Devices & S
 /claude-code-homeassistant-hermit:ha-hatch
 ```
 
-`ha-hatch` verifies your `.env`, walks you through MCP setup, updates `CLAUDE.md`, and confirms connectivity.
+`ha-hatch` verifies your `.env`, installs Python deps (creating a `.venv` if needed), writes a project-scoped `.mcp.json` that registers the HA MCP server under the canonical name `homeassistant`, updates `CLAUDE.md`, and confirms connectivity.
 
-Verify with `/mcp` — confirm `homeassistant` is connected.
+After running ha-hatch: **restart Claude Code**, approve the `homeassistant` server on first use, then verify with `/mcp`.
+
+> **Name matters**: skills and the safety hook expect MCP tool IDs in the form `mcp__homeassistant__*`. The generated `.mcp.json` uses this name automatically.
 
 ---
 

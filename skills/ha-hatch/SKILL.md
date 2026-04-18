@@ -39,62 +39,69 @@ Check that `.env` exists at the project root and contains `HOMEASSISTANT_TOKEN` 
 
 - **If `.env` is present and has both required keys**: proceed.
 
-Also ask the user one question:
+Also check locale:
 
-- **Language / locale**: What language should the agent use for HA-facing output? (e.g. `en`, `pt`, `es`)
+- Read `MEMORY.md`. If a `Language` / locale entry already exists in the House Profile section, use it silently — do not re-ask.
+- If absent, ask: **Language / locale**: What language should the agent use for HA-facing output? (e.g. `en`, `pt`, `es`) Store it in `MEMORY.md` House Profile (create the section if missing).
 
-Store the locale in `MEMORY.md` House Profile (create the section if missing). Do not collect or store the token — it stays in `.env` only.
+Do not collect or store the token — it stays in `.env` only.
 
 ### 4. Python runtime deps + CLI check
 
-Run `python3 -c "import yaml, dotenv"`.
+Run `python3 -c "import yaml, dotenv"` (or `.venv/bin/python -c "import yaml, dotenv"` if `.venv/` exists).
 
-- If it fails, stop and tell the user:
-  ```
-  The ha-agent-lab CLI needs PyYAML and python-dotenv.
-  Install with:  pip install --user PyYAML python-dotenv
-  Docker users:  add "RUN pip install PyYAML python-dotenv" to your image.
-  Then re-run /claude-code-homeassistant-hermit:ha-hatch.
-  ```
-- If it passes, run `${CLAUDE_PLUGIN_ROOT}/bin/ha-agent-lab boot status` (read-only, no `--probe`) to confirm the CLI loads correctly.
+- **If it passes** → skip to the CLI status check below.
+- **If it fails**:
+  1. Probe `python3 -m venv --help`. If that fails, stop and tell the user: `apt install python3-venv` (or OS equivalent), then re-run ha-hatch.
+  2. `AskUserQuestion`: "Install Python deps into a project-local `.venv`? Recommended — isolates from system Python and works on PEP 668 hosts." Options: `venv` (default) / `system` / `skip`.
+     - **`venv`**: run `python3 -m venv ${CLAUDE_PLUGIN_ROOT}/.venv` then `${CLAUDE_PLUGIN_ROOT}/.venv/bin/pip install PyYAML python-dotenv`. Re-probe — if still failing, stop with a diagnostic.
+     - **`system`**: run `pip install --user PyYAML python-dotenv`. If it errors with `externally-managed-environment` (PEP 668), offer to fall back to `venv` automatically.
+     - **`skip`**: note that §6 will probe again and will fail if deps are absent; continue anyway.
+  3. **Do not exit or ask the user to re-run the skill** — continue to the CLI status check in-flight.
 
-### 5. Home Assistant MCP Server guidance
+CLI check: run `${CLAUDE_PLUGIN_ROOT}/bin/ha-agent-lab boot status` (read-only, no `--probe`) to confirm the launcher and Python package resolve correctly.
 
-Surface the official setup instructions. Present each step clearly:
+### 5. Home Assistant MCP Server setup
 
 **Step A — Enable the integration in Home Assistant**
 
-Go to Home Assistant → Settings → Devices & Services → Add Integration → search "Model Context Protocol Server". Enable it. This exposes the MCP endpoint at `https://<your_ha_url>/api/mcp`.
+Tell the user: go to Home Assistant → Settings → Devices & Services → Add Integration → search "Model Context Protocol Server". Enable it. This exposes the MCP endpoint at `<HOMEASSISTANT_LOCAL_URL>/api/mcp`.
 
 Reference: https://www.home-assistant.io/integrations/mcp_server/
 
-**Step B — Connect Claude Code**
+**Step B — Write `.mcp.json`**
 
-Run this command in your terminal (replace with your actual URL and token):
+Check the project root for `.mcp.json`:
+- If absent → write it with the following content. This uses env-var interpolation so the token stays in `.env` and is never stored in the file.
+- If present → read it. If it already contains a `homeassistant` key under `mcpServers`, skip. Otherwise merge `homeassistant` into the existing `mcpServers` object without overwriting other entries.
 
+```json
+{
+  "mcpServers": {
+    "homeassistant": {
+      "type": "http",
+      "url": "${HOMEASSISTANT_LOCAL_URL}/api/mcp",
+      "headers": { "Authorization": "Bearer ${HOMEASSISTANT_TOKEN}" }
+    }
+  }
+}
 ```
-claude mcp add-json homeassistant '{
-  "type": "http",
-  "url": "https://<your_home_assistant_url>/api/mcp",
-  "headers": { "Authorization": "Bearer <HOMEASSISTANT_TOKEN>" }
-}'
-```
 
-OAuth note: If your HA instance supports it, the official docs also document an OAuth flow via `--oauth-client-information`. The token fallback above works for all cases.
+The name `homeassistant` is required — skills and the safety hook match on `mcp__homeassistant__*` tool IDs.
 
-Important: The registration name **must be `homeassistant`** to match the tool IDs expected by this plugin's skills, agents, and safety hook. If you use a different name, update the `hooks/hooks.json` matcher and `.claude/settings.json` accordingly.
+Note: `.mcp.json` contains no secrets (values are `${VAR}` references) and is safe to commit if teammates should inherit the registration.
 
-**Step C — Verify MCP connectivity**
+**Step C — Activate and verify**
 
-Run `/mcp` inside Claude Code and confirm `homeassistant` appears as connected.
+Tell the user: **restart Claude Code** in this project directory. On first use, Claude Code will prompt you to trust the `homeassistant` server — approve it. Then run `/mcp` to confirm `homeassistant` appears as connected. The next `ha-boot` will verify live HA connectivity.
 
-Ask the user to confirm they have completed Steps A–C before proceeding.
+Alternative: if you prefer user-scope registration (available outside this project), you can run `claude mcp add-json homeassistant '{"type":"http","url":"<url>/api/mcp","headers":{"Authorization":"Bearer <token>"}}'` instead and skip the `.mcp.json` file.
 
 ### 6. Verify Python CLI (full probe)
 
 Run `${CLAUDE_PLUGIN_ROOT}/bin/ha-agent-lab boot status --probe` and present the result. If it fails:
 
-- Missing deps → instruct the user to run `pip install --user PyYAML python-dotenv`.
+- Missing deps → re-run §4 (re-invoke ha-hatch) to create `.venv` and install deps.
 - Connection refused → check `HOMEASSISTANT_LOCAL_URL` in `.env`.
 - Auth error → check `HOMEASSISTANT_TOKEN`.
 
@@ -112,7 +119,7 @@ Check CLAUDE.md for the marker comment `<!-- claude-code-homeassistant-hermit: H
 
 Write `_hermit_versions["claude-code-homeassistant-hermit"]` into `.claude-code-hermit/config.json` with the current plugin version.
 
-Also prompt: "Add the default HA daily context-refresh routine (08:30 every day)? It runs `${CLAUDE_PLUGIN_ROOT}/bin/ha-agent-lab ha refresh-context` automatically." — Yes adds `routines.daily-ha-context` entry to `config.json`; No skips.
+If `routines.daily-ha-context` is already present in `config.json`, skip the prompt. Otherwise ask: "Add the default HA daily context-refresh routine (08:30 every day)? It runs `${CLAUDE_PLUGIN_ROOT}/bin/ha-agent-lab ha refresh-context` automatically." — Yes adds `routines.daily-ha-context` entry to `config.json`; No skips.
 
 ### 9. Final report
 
@@ -121,14 +128,14 @@ Summarize:
 ```
 ha-hatch complete
   ✓  .env verified (user-managed)
-  ✓  Python CLI: ${CLAUDE_PLUGIN_ROOT}/bin/ha-agent-lab boot status --probe → OK / FAILED
-  ?  HA MCP Server: manually verified via /mcp
+  ✓  Python deps: <venv at .venv/ | system python> → OK / FAILED
+  ✓  Python CLI: bin/ha-agent-lab boot status --probe → OK / FAILED
+  ✓  .mcp.json: homeassistant entry written / already present
   ✓  CLAUDE.md updated
   ✓  config.json stamped v<version>
 
 Manual steps remaining:
   - Enable 'mcp_server' integration in Home Assistant (if not done)
-  - Run: claude mcp add-json homeassistant '{...}' (if not done)
-  - Run /mcp in Claude Code to confirm 'homeassistant' is connected
-  - If you registered under a different name: update hooks/hooks.json matcher
+  - Restart Claude Code and approve the 'homeassistant' server on first use
+  - Run /mcp to confirm 'homeassistant' is connected
 ```
