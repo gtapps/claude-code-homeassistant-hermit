@@ -11,6 +11,7 @@ from .ha_api import probe_home_assistant_url, select_home_assistant_url
 
 
 LANGUAGE_PATTERN = re.compile(r"^- Language:\s*(.+?)\s*$", re.MULTILINE)
+_PLUGIN_ROOT = Path(__file__).resolve().parents[2]
 
 
 @dataclass(slots=True)
@@ -64,18 +65,17 @@ def write_language(root: Path, language: str) -> Path:
     return path
 
 
-def _command_prefix(root: Path) -> str:
-    plugin_root = Path(__file__).resolve().parents[2]
-    launcher = plugin_root / "bin" / "ha-agent-lab"
+def _command_prefix() -> str:
+    launcher = _PLUGIN_ROOT / "bin" / "ha-agent-lab"
     if launcher.exists():
         return str(launcher)
-    return f"{plugin_root}/.venv/bin/python -m ha_agent_lab"
+    return f"{_PLUGIN_ROOT}/.venv/bin/python -m ha_agent_lab"
 
 
 def boot_status(config: AppConfig, probe: bool = False, staleness_hours: int = 24) -> BootStatus:
     root = config.root
     language = read_language(root)
-    command_prefix = _command_prefix(root)
+    command_prefix = _command_prefix()
     context_path = normalized_context_path(root)
     context_exists = context_path.exists()
     context_age_hours: float | None = None

@@ -91,7 +91,7 @@ ${CLAUDE_PLUGIN_ROOT}/bin/ha-agent-lab boot status
 For the token value, run this Python one-liner (avoid using the word TOKEN in any Bash argument — the deny-pattern hook would block it):
 
 ```bash
-${CLAUDE_PLUGIN_ROOT}/.venv/bin/python -c "from dotenv import dotenv_values; import json; v=dotenv_values('.env'); print(v.get('HOMEASSISTANT_TOKEN',''))"
+${CLAUDE_PLUGIN_ROOT}/.venv/bin/python -c "from dotenv import dotenv_values; v=dotenv_values('.env'); print(v.get('HOMEASSISTANT_TOKEN',''))"
 ```
 
 Check the project root for `.mcp.json`:

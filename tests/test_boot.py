@@ -53,8 +53,8 @@ def test_boot_status_reports_missing_required_setup(tmp_path: Path) -> None:
     assert not status.can_refresh_context
 
 
-def test_command_prefix_returns_absolute_plugin_launcher(tmp_path: Path) -> None:
-    prefix = _command_prefix(tmp_path)
+def test_command_prefix_returns_absolute_plugin_launcher() -> None:
+    prefix = _command_prefix()
     assert prefix.endswith("/bin/ha-agent-lab")
     assert Path(prefix).is_absolute()
 
