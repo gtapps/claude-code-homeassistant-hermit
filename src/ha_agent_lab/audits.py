@@ -15,10 +15,6 @@ ERROR_REGEX = re.compile(r"(automation\.[a-z0-9_]+)", re.IGNORECASE)
 
 
 def audit_automations(root: Path, client: HomeAssistantClient) -> dict[str, Any]:
-    """Fetch live HA automations, audit each against safety policy, write artifacts.
-
-    Returns summary dict with total count and list of violations.
-    """
     raw = client.get("/api/config/automation/config")
     automations = raw if isinstance(raw, list) else []
 
@@ -65,14 +61,15 @@ def audit_automations(root: Path, client: HomeAssistantClient) -> dict[str, Any]
             for reason in v["reasons"]:
                 body_lines.append(f"  - {reason}")
 
+    ts = utc_timestamp()
     write_markdown_artifact(
         root,
         ".claude-code-hermit/raw",
         "audit-ha-safety",
         {
-            "title": f"HA Safety Audit — {utc_timestamp()}",
+            "title": f"HA Safety Audit — {ts}",
             "type": "audit",
-            "created": utc_timestamp(),
+            "created": ts,
             "source": "plugin-check",
             "tags": ["ha-safety", "audit", "policy-drift"],
             "total_automations": summary["total_automations"],
@@ -85,21 +82,17 @@ def audit_automations(root: Path, client: HomeAssistantClient) -> dict[str, Any]
 
 
 def review_automation_errors(root: Path, client: HomeAssistantClient, min_hits: int = 3) -> dict[str, Any]:
-    """Fetch HA error log, count error occurrences per automation, flag recurring ones.
-
-    Returns summary dict with total automations flagged and per-automation counts.
-    """
     raw = client.get("/api/error_log")
     text = raw if isinstance(raw, str) else ""
 
+    lines = text.splitlines()
     counts: dict[str, int] = {}
-    for line in text.splitlines():
+    for line in lines:
         lower = line.lower()
         if not any(p in lower for p in ERROR_PATTERNS):
             continue
-        for match in ERROR_REGEX.findall(line):
-            key = match.lower()
-            counts[key] = counts.get(key, 0) + 1
+        for match in ERROR_REGEX.findall(lower):
+            counts[match] = counts.get(match, 0) + 1
 
     flagged = [
         {"entity_id": eid, "count": count}
@@ -109,7 +102,7 @@ def review_automation_errors(root: Path, client: HomeAssistantClient, min_hits: 
 
     summary = {
         "min_hits": min_hits,
-        "total_lines_scanned": len(text.splitlines()) if text else 0,
+        "total_lines_scanned": len(lines),
         "flagged_automations": flagged,
     }
 
@@ -133,14 +126,15 @@ def review_automation_errors(root: Path, client: HomeAssistantClient, min_hits: 
         for item in flagged:
             body_lines.append(f"- `{item['entity_id']}` — {item['count']} error-pattern hits")
 
+    ts = utc_timestamp()
     write_markdown_artifact(
         root,
         ".claude-code-hermit/raw",
         "audit-ha-automation-errors",
         {
-            "title": f"HA Automation Errors — {utc_timestamp()}",
+            "title": f"HA Automation Errors — {ts}",
             "type": "audit",
-            "created": utc_timestamp(),
+            "created": ts,
             "source": "plugin-check",
             "tags": ["ha-automation", "errors", "review"],
             "min_hits": min_hits,

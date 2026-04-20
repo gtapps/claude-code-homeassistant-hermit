@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+from datetime import date
 from pathlib import Path
 from typing import Any
 
@@ -188,8 +189,6 @@ def main(argv: list[str] | None = None) -> int:
 
 
 def _print_safety_audit_summary(summary: dict[str, Any]) -> None:
-    from datetime import date
-
     violations = summary.get("violations", [])
     total = summary.get("total_automations", 0)
     print(f"ha-safety-audit findings — {date.today().isoformat()}")
@@ -200,13 +199,11 @@ def _print_safety_audit_summary(summary: dict[str, Any]) -> None:
     for v in violations:
         reasons = "; ".join(v.get("reasons", []))
         print(f"- {v.get('alias')} (`{v.get('id')}`): {reasons}")
-    passed = summary.get("passed", max(0, total - len(violations)))
+    passed = summary["passed"]
     print(f"No action needed: {passed} automations passed")
 
 
 def _print_automation_errors_summary(summary: dict[str, Any]) -> None:
-    from datetime import date
-
     flagged = summary.get("flagged_automations", [])
     print(f"ha-automation-errors findings — {date.today().isoformat()}")
     if not flagged:
