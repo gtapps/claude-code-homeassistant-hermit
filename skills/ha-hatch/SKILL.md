@@ -96,7 +96,10 @@ ${CLAUDE_PLUGIN_ROOT}/.venv/bin/python -c "from dotenv import dotenv_values; v=d
 
 Check the project root for `.mcp.json`:
 - If absent → write it with literal values substituted.
-- If present → read it. If it already contains a `homeassistant` key under `mcpServers`, skip. Otherwise merge `homeassistant` into the existing `mcpServers` object without overwriting other entries.
+- If present → read it and check the `homeassistant` entry:
+  - If absent → merge it in with literal values.
+  - If present **and** the `url` or `Authorization` value contains `${` (old placeholder format) → rewrite that entry with literal values and tell the user the stale entry was replaced.
+  - If present and already contains literal values → skip.
 
 ```json
 {
