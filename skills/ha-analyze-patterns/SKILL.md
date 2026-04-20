@@ -28,7 +28,23 @@ allowed-tools:
 6. **Update memory**:
    - Update `MEMORY.md` Learned Patterns section with key findings.
    - If findings are extensive, write details to `memory/house-entities.md`.
-7. **Propose automations**: If clear patterns emerge, suggest them. For complex ones, delegate to `@ha-automation-builder`.
+7. **Emit summary for reflect**: Always output a plain-text findings block to stdout, regardless of how the skill was invoked. Reflect reads this when running the skill as a `plugin_check` and routes actionable items through the proposal pipeline. Use this format:
+
+   ```
+   ha-analyze-patterns findings — <date>
+   Automation opportunities: <N>
+   - <opportunity 1>
+   - <opportunity 2>
+   Reliability issues: <N>
+   - <issue 1>
+   Waste patterns: <N>
+   - <waste 1>
+   No action needed: <list anything normal or already automated>
+   ```
+
+   If there are zero findings across all categories, output: `ha-analyze-patterns findings — <date>\nNo actionable findings.`
+
+8. **Propose automations**: If clear patterns emerge, suggest them. For complex ones, delegate to `@ha-automation-builder`.
 
 ## What to Look For
 

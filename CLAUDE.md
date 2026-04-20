@@ -30,6 +30,9 @@ Autonomous HA agent powered by Claude Code + claude-code-hermit.
 | `/claude-code-homeassistant-hermit:ha-analyze-patterns` | Identify patterns and automation opportunities |
 | `/claude-code-homeassistant-hermit:ha-house-status` | Quick live house status via MCP |
 | `/claude-code-homeassistant-hermit:ha-morning-brief` | Morning house brief — live status, overnight anomalies, recommendations |
+| `/claude-code-homeassistant-hermit:ha-safety-audit` | Re-audit all live automations against the safety policy (plugin_check, weekly) |
+| `/claude-code-homeassistant-hermit:ha-integration-health` | Detect dropped integrations via per-domain unavailable ratios (plugin_check, daily) |
+| `/claude-code-homeassistant-hermit:ha-automation-error-review` | Flag automations with recurring errors in HA's log (plugin_check, daily) |
 
 ## Subagents
 
@@ -54,6 +57,8 @@ ${CLAUDE_PLUGIN_ROOT}/bin/ha-agent-lab ha refresh-context [--incremental]
 ${CLAUDE_PLUGIN_ROOT}/bin/ha-agent-lab ha simulate <artifact>
 ${CLAUDE_PLUGIN_ROOT}/bin/ha-agent-lab ha validate-apply <artifact> [--reload automation|script]
 ${CLAUDE_PLUGIN_ROOT}/bin/ha-agent-lab ha policy-check <entity_id_or_yaml>
+${CLAUDE_PLUGIN_ROOT}/bin/ha-agent-lab ha audit-automations
+${CLAUDE_PLUGIN_ROOT}/bin/ha-agent-lab ha automation-errors [--min-hits N]
 ${CLAUDE_PLUGIN_ROOT}/bin/ha-agent-lab boot status [--probe]
 ${CLAUDE_PLUGIN_ROOT}/bin/ha-agent-lab boot store --language <locale> --local-url <url> [--remote-url <url>] [--token <token>]
 .venv/bin/pytest tests/ -v
@@ -69,6 +74,12 @@ Requires `.env` at project root (gitignored) with `HOMEASSISTANT_TOKEN` and `HOM
 - `memory/*.md`: detailed topic files (entities, automation history)
 - `.claude-code-hermit/raw/analysis/`: pattern analysis JSON artifacts
 - Hermit session reports: `.claude-code-hermit/sessions/S-*-REPORT.md`
+
+## Routines (hermit ≥ 1.0.12)
+
+HA routines (`daily-ha-context`, `morning-brief`) are registered during `/claude-code-homeassistant-hermit:ha-hatch` into `config.routines[]`. To activate them in an interactive session run `/claude-code-hermit:hermit-routines load`. In always-on deployments they are loaded automatically at startup.
+
+Enable the `morning-brief` routine in `config.json` (`"enabled": true`) once initial setup is complete.
 
 ## Repo Layout
 

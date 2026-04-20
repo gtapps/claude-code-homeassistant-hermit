@@ -27,6 +27,9 @@
 | `/claude-code-homeassistant-hermit:ha-analyze-patterns` | Identify patterns and automation opportunities |
 | `/claude-code-homeassistant-hermit:ha-house-status` | Quick live house status via MCP |
 | `/claude-code-homeassistant-hermit:ha-morning-brief` | Morning house brief — live status, overnight anomalies, recommendations |
+| `/claude-code-homeassistant-hermit:ha-safety-audit` | Re-audit all live automations against the safety policy (plugin_check, weekly) |
+| `/claude-code-homeassistant-hermit:ha-integration-health` | Detect dropped integrations via per-domain unavailable ratios (plugin_check, daily) |
+| `/claude-code-homeassistant-hermit:ha-automation-error-review` | Flag automations with recurring errors in HA's log (plugin_check, daily) |
 
 ## Subagents
 
@@ -51,6 +54,8 @@ ${CLAUDE_PLUGIN_ROOT}/bin/ha-agent-lab ha refresh-context [--incremental]
 ${CLAUDE_PLUGIN_ROOT}/bin/ha-agent-lab ha simulate <artifact>
 ${CLAUDE_PLUGIN_ROOT}/bin/ha-agent-lab ha validate-apply <artifact> [--reload automation|script]
 ${CLAUDE_PLUGIN_ROOT}/bin/ha-agent-lab ha policy-check <entity_id_or_yaml>
+${CLAUDE_PLUGIN_ROOT}/bin/ha-agent-lab ha audit-automations
+${CLAUDE_PLUGIN_ROOT}/bin/ha-agent-lab ha automation-errors [--min-hits N]
 ${CLAUDE_PLUGIN_ROOT}/bin/ha-agent-lab boot status [--probe]
 ${CLAUDE_PLUGIN_ROOT}/bin/ha-agent-lab boot store --language <locale> --local-url <url> [--remote-url <url>] [--token <token>]
 .venv/bin/pytest tests/ -v
@@ -72,6 +77,8 @@ Requires `.env` at project root (gitignored) with:
 
 ## Quick Reference
 
-`/claude-code-homeassistant-hermit:ha-boot` `/claude-code-homeassistant-hermit:ha-house-status` `/claude-code-homeassistant-hermit:ha-morning-brief` `/claude-code-homeassistant-hermit:ha-refresh-context` `/claude-code-homeassistant-hermit:ha-build-automation` `/claude-code-homeassistant-hermit:ha-apply-change` `/claude-code-homeassistant-hermit:ha-analyze-patterns`
+**HA skills**: `/claude-code-homeassistant-hermit:ha-boot` `/claude-code-homeassistant-hermit:ha-house-status` `/claude-code-homeassistant-hermit:ha-morning-brief` `/claude-code-homeassistant-hermit:ha-refresh-context` `/claude-code-homeassistant-hermit:ha-build-automation` `/claude-code-homeassistant-hermit:ha-apply-change` `/claude-code-homeassistant-hermit:ha-analyze-patterns`
+
+**Routines** (hermit ≥ 1.0.12): `/claude-code-hermit:hermit-routines load` — activate scheduled routines (required once per interactive session). HA routines (`daily-ha-context`, `morning-brief`) are registered by `/claude-code-homeassistant-hermit:ha-hatch`. Enable `morning-brief` routine in `config.json` once setup is complete.
 
 <!-- /claude-code-homeassistant-hermit: Home Assistant Workflow -->

@@ -13,7 +13,7 @@ Set up the Home Assistant layer for this project. Idempotent — safe to re-run;
 
 Read `.claude-code-hermit/config.json`.
 
-- If the file is missing or `_hermit_versions["claude-code-hermit"]` is absent or less than `1.0.0`:
+- If the file is missing or `_hermit_versions["claude-code-hermit"]` is absent or less than `1.0.12`:
   - `AskUserQuestion`: "Core hermit is not initialized. Run `/claude-code-hermit:hatch` now?"
   - Yes → invoke `/claude-code-hermit:hatch`, then continue.
   - No → stop and explain what is required.
@@ -125,11 +125,38 @@ Check CLAUDE.md for the marker comment `<!-- claude-code-homeassistant-hermit: H
 - Present and version matches current plugin version → skip.
 - Present and version is stale → replace the block between the opening and closing markers with the updated content.
 
-### 8. Stamp version
+### 8. Stamp version and register routines
 
 Write `_hermit_versions["claude-code-homeassistant-hermit"]` into `.claude-code-hermit/config.json` with the current plugin version.
 
-If `routines.daily-ha-context` is already present in `config.json`, skip the prompt. Otherwise ask: "Add the default HA daily context-refresh routine (08:30 every day)? It runs `${CLAUDE_PLUGIN_ROOT}/bin/ha-agent-lab ha refresh-context` automatically." — Yes adds `routines.daily-ha-context` entry to `config.json`; No skips.
+**Reflect routine check**: Read `config.routines` array. If no entry has `"id": "reflect"`, warn:
+
+> "No `reflect` routine found in config.json. Run `/claude-code-hermit:hermit-evolve` to seed it (required for daily pattern tracking in hermit ≥ 1.0.13)."
+
+**HA routine registration**: `config.routines` is an array of objects with `{id, schedule, skill, enabled, run_during_waiting}`. For each HA routine below, check whether an entry with that `id` already exists in the array. If it does, skip. If not, prompt and merge it in.
+
+1. **Context refresh** — "Add daily HA context-refresh routine (08:30 every day)? Keeps entity snapshots fresh automatically."
+   ```json
+   {"id": "daily-ha-context", "schedule": "30 8 * * *", "skill": "claude-code-homeassistant-hermit:ha-refresh-context", "enabled": true, "run_during_waiting": false}
+   ```
+
+2. **Morning brief** — "Add morning house brief routine (09:00 every day)? Delivers a live house summary at start of day. Disabled by default — enable after setup is complete."
+   ```json
+   {"id": "morning-brief", "schedule": "0 9 * * *", "skill": "claude-code-homeassistant-hermit:ha-morning-brief", "enabled": false, "run_during_waiting": false}
+   ```
+
+After adding any new entries, remind the operator: "Run `/claude-code-hermit:hermit-routines load` to activate routines in the current session."
+
+**Plugin checks registration**: `config.plugin_checks` is an array of periodic skill entries that reflect invokes on a cadence and funnels through the proposal pipeline. For each entry below, check whether an existing record has the same `id`. If not, append it — no prompt needed, all four are safe read-only analyses.
+
+```json
+{"id": "ha-patterns",            "plugin": "claude-code-homeassistant-hermit", "skill": "claude-code-homeassistant-hermit:ha-analyze-patterns",        "enabled": true, "trigger": "interval", "interval_days": 7}
+{"id": "ha-safety-audit",        "plugin": "claude-code-homeassistant-hermit", "skill": "claude-code-homeassistant-hermit:ha-safety-audit",           "enabled": true, "trigger": "interval", "interval_days": 7}
+{"id": "ha-integration-health",  "plugin": "claude-code-homeassistant-hermit", "skill": "claude-code-homeassistant-hermit:ha-integration-health",    "enabled": true, "trigger": "interval", "interval_days": 1}
+{"id": "ha-automation-errors",   "plugin": "claude-code-homeassistant-hermit", "skill": "claude-code-homeassistant-hermit:ha-automation-error-review", "enabled": true, "trigger": "interval", "interval_days": 1}
+```
+
+These replace any need for CronCreate routines around analysis/observability — reflect picks up whichever check is due, runs it, and any findings surface as proposals automatically.
 
 ### 9. Final report
 
@@ -143,6 +170,8 @@ ha-hatch complete
   ✓  .mcp.json: homeassistant entry written / already present
   ✓  CLAUDE.md updated
   ✓  config.json stamped v<version>
+  ✓  Routines registered: daily-ha-context, morning-brief (disabled by default)
+  ✓  plugin_checks registered: ha-patterns, ha-safety-audit, ha-integration-health, ha-automation-errors
 
 Manual steps remaining:
   - Enable 'Model Context Protocol Server' integration in Home Assistant (if not done)
@@ -150,6 +179,8 @@ Manual steps remaining:
   - Restart Claude Code and approve the 'homeassistant' server on first use
   - Run /mcp to confirm 'homeassistant' is connected
   - Run /claude-code-homeassistant-hermit:ha-refresh-context to populate the initial context snapshot
+  - Run /claude-code-hermit:hermit-routines load to activate scheduled routines in this session
+  - Enable `morning-brief` routine in `.claude-code-hermit/config.json` once the house profile is confirmed
 
 Always-on runtime (pick one):
   - Docker (recommended): /claude-code-hermit:docker-setup

@@ -46,6 +46,22 @@ def build_parser() -> argparse.ArgumentParser:
     policy_check_parser = ha_subparsers.add_parser("policy-check")
     policy_check_parser.add_argument("target", help="entity_id or path to YAML file")
 
+    ha_subparsers.add_parser(
+        "audit-automations",
+        help="Audit all live HA automations against the safety policy (plugin_check entry point).",
+    )
+
+    errors_parser = ha_subparsers.add_parser(
+        "automation-errors",
+        help="Scan HA error log for recurring automation failures (plugin_check entry point).",
+    )
+    errors_parser.add_argument(
+        "--min-hits",
+        type=int,
+        default=3,
+        help="Minimum error-pattern hits per automation to flag (default: 3).",
+    )
+
     return parser
 
 
@@ -123,6 +139,30 @@ def main(argv: list[str] | None = None) -> int:
         )
         return 0 if result.is_valid else 1
 
+    if args.command == "ha" and args.ha_command == "audit-automations":
+        try:
+            from .audits import audit_automations
+
+            client = HomeAssistantClient(config)
+            summary = audit_automations(root, client)
+            _print_safety_audit_summary(summary)
+            return 0
+        except HomeAssistantError as exc:
+            print(str(exc))
+            return 1
+
+    if args.command == "ha" and args.ha_command == "automation-errors":
+        try:
+            from .audits import review_automation_errors
+
+            client = HomeAssistantClient(config)
+            summary = review_automation_errors(root, client, min_hits=args.min_hits)
+            _print_automation_errors_summary(summary)
+            return 0
+        except HomeAssistantError as exc:
+            print(str(exc))
+            return 1
+
     if args.command == "ha" and args.ha_command == "validate-apply":
         try:
             client = HomeAssistantClient(config)
@@ -145,6 +185,36 @@ def main(argv: list[str] | None = None) -> int:
 
     parser.error("Unsupported command.")
     return 1
+
+
+def _print_safety_audit_summary(summary: dict[str, Any]) -> None:
+    from datetime import date
+
+    violations = summary.get("violations", [])
+    total = summary.get("total_automations", 0)
+    print(f"ha-safety-audit findings — {date.today().isoformat()}")
+    if not violations:
+        print(f"No actionable findings. ({total} automations scanned)")
+        return
+    print(f"Policy violations: {len(violations)}")
+    for v in violations:
+        reasons = "; ".join(v.get("reasons", []))
+        print(f"- {v.get('alias')} (`{v.get('id')}`): {reasons}")
+    passed = summary.get("passed", max(0, total - len(violations)))
+    print(f"No action needed: {passed} automations passed")
+
+
+def _print_automation_errors_summary(summary: dict[str, Any]) -> None:
+    from datetime import date
+
+    flagged = summary.get("flagged_automations", [])
+    print(f"ha-automation-errors findings — {date.today().isoformat()}")
+    if not flagged:
+        print("No actionable findings.")
+        return
+    print(f"Automations with recurring errors: {len(flagged)}")
+    for item in flagged:
+        print(f"- {item['entity_id']}: {item['count']} error-pattern hits")
 
 
 def _handle_policy_check(target: str) -> int:

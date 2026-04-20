@@ -14,5 +14,8 @@
     "automation",
     "mcp",
     "gtapps"
-  ]
+  ],
+  "requires": {
+    "claude-code-hermit": ">=1.0.12"
+  }
 }

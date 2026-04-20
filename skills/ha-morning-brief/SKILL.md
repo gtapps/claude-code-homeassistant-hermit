@@ -16,6 +16,15 @@ allowed-tools:
 
 A house-focused morning brief that combines live HA state with hermit session context. Designed to run as the `morning` routine at start of day.
 
+## Delivery Guard
+
+Before doing any work, read `.claude-code-hermit/state/runtime.json` if it exists.
+
+- If `session_state` is `waiting`: the operator is absent. Check `config.json` for a configured Discord channel.
+  - Discord channel present → proceed, deliver via Discord only (skip terminal output).
+  - No Discord channel → suppress entirely (log `morning-brief skipped: session_state=waiting, no channel` to SHELL.md Monitoring and exit).
+- Otherwise: proceed normally.
+
 ## Steps
 
 1. **Time & context** — Call `GetDateTime` for current time. Read `.claude-code-hermit/OPERATOR.md` for priorities and language preferences.
@@ -32,14 +41,16 @@ A house-focused morning brief that combines live HA state with hermit session co
 
 4. **Context freshness** — Check `.claude-code-hermit/raw/snapshot-ha-context-latest.json` modification time. If older than 24h, note it as stale.
 
-5. **Overnight activity** — Read the last 10 lines of `.claude-code-hermit/sessions/SHELL.md` Monitoring section for any overnight alerts or findings worth surfacing.
+5. **Overnight activity** — Read `.claude-code-hermit/sessions/SHELL.md`. Scan both the **Monitoring** section and the **Findings** section (last 20 lines combined). In newborn-phase hermits (< 3 days old), pattern observations land in Findings as `Noticed: <pattern>` entries — include those. Surface any alerts or notable patterns found overnight.
 
-6. **Pending work** — Scan for:
+6. **Cost-spike check** — Read `.claude-code-hermit/state/reflection-state.json` if it exists. Look for any `cost_spike` entry with a timestamp within the last 24 hours. If found, include a "Cost alert" bullet in the brief with the flagged amount.
+
+7. **Pending work** — Scan for:
    - `Glob` for `.claude-code-hermit/proposals/PROP-*.md` — read status from each, list any `pending` proposals
    - Check if `.claude-code-hermit/sessions/NEXT-TASK.md` exists (queued task)
    - Read `.claude-code-hermit/cost-summary.md` if it exists — include yesterday's cost
 
-7. **Compose brief** — Write a concise morning brief in the operator's language (from OPERATOR.md preferences). Use the format below.
+8. **Compose brief** — Write a concise morning brief in the operator's language (from OPERATOR.md preferences). Use the format below.
 
 ## Output Format
 
@@ -58,14 +69,18 @@ Alertas:
 Pendente:
 - [proposals, queued tasks, or "Nada pendente"]
 
+Custo:
+- [yesterday's cost if available; cost-spike alert if flagged by reflect]
+
 Prioridades hoje:
 - [from OPERATOR.md Current Priority, filtered to actionable items]
 ```
 
-Adapt the greeting and section headers to the operator's configured language. Keep the entire brief under 20 lines.
+Adapt the greeting and section headers to the operator's configured language. Keep the entire brief under 25 lines.
 
 ## Delivery
 
 - If invoked from a Discord channel context: send via `reply` to that channel
-- If invoked as a routine (no channel context): output to terminal only
+- If invoked as a routine and `session_state` is `waiting` with a Discord channel configured: send via Discord only
+- If invoked as a routine (no channel context, operator present): output to terminal only
 - Never include secrets, tokens, or internal file paths in the brief

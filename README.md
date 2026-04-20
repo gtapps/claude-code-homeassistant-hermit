@@ -110,6 +110,11 @@ Start every session with:
 | `ha-build-automation` | Draft and validate an automation YAML |
 | `ha-apply-change` | Apply validated YAML with safety checks |
 | `ha-analyze-patterns` | Identify automation opportunities from history data |
+| `ha-safety-audit` | Re-audit live automations against the safety policy (weekly plugin_check) |
+| `ha-integration-health` | Detect dropped integrations via per-domain unavailable ratios (daily plugin_check) |
+| `ha-automation-error-review` | Flag automations with recurring errors in HA's log (daily plugin_check) |
+
+The last three are registered as `plugin_checks` by `ha-hatch` and fire on a cadence via hermit's reflect pipeline — findings surface as proposals automatically.
 
 All skills are namespaced: `/claude-code-homeassistant-hermit:ha-*`.
 
@@ -134,6 +139,8 @@ ${CLAUDE_PLUGIN_ROOT}/bin/ha-agent-lab ha refresh-context
 ${CLAUDE_PLUGIN_ROOT}/bin/ha-agent-lab ha simulate <artifact>
 ${CLAUDE_PLUGIN_ROOT}/bin/ha-agent-lab ha validate-apply <artifact> --reload automation
 ${CLAUDE_PLUGIN_ROOT}/bin/ha-agent-lab ha policy-check <target>
+${CLAUDE_PLUGIN_ROOT}/bin/ha-agent-lab ha audit-automations
+${CLAUDE_PLUGIN_ROOT}/bin/ha-agent-lab ha automation-errors [--min-hits N]
 ${CLAUDE_PLUGIN_ROOT}/bin/ha-agent-lab boot status --probe
 ```
 
@@ -141,7 +148,7 @@ ${CLAUDE_PLUGIN_ROOT}/bin/ha-agent-lab boot status --probe
 
 ```
 claude-code-homeassistant-hermit (this plugin)
-  ├── skills/            HA workflow skills (8)
+  ├── skills/            HA workflow skills (11)
   ├── agents/            HA subagents (3)
   ├── hooks/             Safety gate (mcp-safety-gate.py) + hooks.json
   ├── bin/               ha-agent-lab CLI
@@ -150,7 +157,7 @@ claude-code-homeassistant-hermit (this plugin)
   ├── state-templates/   CLAUDE-APPEND.md (injected by ha-hatch)
   └── tests/             Hook and policy tests
 
-claude-code-hermit (core, required ≥ 1.0.0)
+claude-code-hermit (core, required ≥ 1.0.12)
   └── Session lifecycle, proposals, cost tracking, memory
 ```
 

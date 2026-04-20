@@ -2,6 +2,7 @@
 name: ha-house-status
 description: Get a quick live status of the house via MCP. Shows lights, covers, climate, presence, and notable states. Use when the operator asks about house state.
 allowed-tools:
+  - Bash
   - Read
   - mcp__homeassistant__GetLiveContext
   - mcp__homeassistant__GetDateTime
@@ -14,7 +15,9 @@ allowed-tools:
 1. Call `GetDateTime` for current time and date.
 2. Call `GetLiveContext` for the live house snapshot.
 3. Read `MEMORY.md` for the stored language.
-4. Present a human-readable summary in the stored locale, organized by:
+4. Check `.claude-code-hermit/raw/snapshot-ha-normalized-latest.json` modification time. If older than 24 hours or missing, append a warning to the status output:
+   > "Context snapshot is stale — run `/claude-code-homeassistant-hermit:ha-refresh-context` for accurate entity data."
+5. Present a human-readable summary in the stored locale, organized by:
    - **Presence**: who is home / away
    - **Lights**: which are on
    - **Covers/Blinds**: positions
