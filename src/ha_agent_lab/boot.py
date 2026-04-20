@@ -65,11 +65,11 @@ def write_language(root: Path, language: str) -> Path:
 
 
 def _command_prefix(root: Path) -> str:
-    if (root / "bin" / "ha-agent-lab").exists():
-        return "./bin/ha-agent-lab"
-    if (root / ".venv" / "bin" / "python").exists():
-        return ".venv/bin/python -m ha_agent_lab"
-    return "python -m ha_agent_lab"
+    plugin_root = Path(__file__).resolve().parents[2]
+    launcher = plugin_root / "bin" / "ha-agent-lab"
+    if launcher.exists():
+        return str(launcher)
+    return f"{plugin_root}/.venv/bin/python -m ha_agent_lab"
 
 
 def boot_status(config: AppConfig, probe: bool = False, staleness_hours: int = 24) -> BootStatus:

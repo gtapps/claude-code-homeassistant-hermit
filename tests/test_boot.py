@@ -49,20 +49,14 @@ def test_boot_status_reports_missing_required_setup(tmp_path: Path) -> None:
     assert "Language" in fields
     assert "HOMEASSISTANT_LOCAL_URL" in fields
     assert "HOMEASSISTANT_TOKEN" in fields
-    assert status.command_prefix == "./bin/ha-agent-lab"
+    assert status.command_prefix.endswith("/bin/ha-agent-lab")
     assert not status.can_refresh_context
 
 
-def test_command_prefix_prefers_repo_launcher(tmp_path: Path) -> None:
-    _write_launcher(tmp_path)
-    assert _command_prefix(tmp_path) == "./bin/ha-agent-lab"
-
-
-def test_command_prefix_falls_back_to_repo_venv(tmp_path: Path) -> None:
-    python_path = tmp_path / ".venv" / "bin" / "python"
-    python_path.parent.mkdir(parents=True, exist_ok=True)
-    python_path.write_text("", encoding="utf-8")
-    assert _command_prefix(tmp_path) == ".venv/bin/python -m ha_agent_lab"
+def test_command_prefix_returns_absolute_plugin_launcher(tmp_path: Path) -> None:
+    prefix = _command_prefix(tmp_path)
+    assert prefix.endswith("/bin/ha-agent-lab")
+    assert Path(prefix).is_absolute()
 
 
 def test_boot_status_exposes_single_pass_setup_checklist(tmp_path: Path) -> None:
