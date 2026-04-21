@@ -9,33 +9,37 @@
 
 # claude-code-homeassistant-hermit
 
-**Turn your Claude Code hermit into an always-on Home Assistant caretaker that lives in your smart home.**
+**Turn Claude Code into an Always-on Personal AI Assistant for your Home Assistant.**
 
 A [`claude-code-hermit`](https://github.com/gtapps/claude-code-hermit) plugin for the Home Assistant community. It learns your entities, drafts automations under a safety policy, and lets hermit's reflect loop surface integration drops, automation errors, and energy anomalies — as proposals you accept or reject.
 
-> **Early alpha — this plugin controls real home devices. Review every action before confirming.**
-
-Five commands to a running HA hermit:
+Three steps to a running 24/7 pHA hermit:
 
 ```bash
+# Install
 claude plugin marketplace add gtapps/claude-code-hermit
 claude plugin marketplace add gtapps/claude-code-homeassistant-hermit
 claude plugin install claude-code-hermit@claude-code-hermit --scope project
 claude plugin install claude-code-homeassistant-hermit@claude-code-homeassistant-hermit --scope project
+
+# Initialize
 /claude-code-homeassistant-hermit:ha-hatch
+
+# Go always-on
+/claude-code-hermit:docker-setup
 ```
 
 ---
 
 ## How It Works
 
-1. **Install and meet your house.** `ha-hatch` registers the Home Assistant MCP server and seeds `CLAUDE.md`. `ha-refresh-context` then snapshots every entity, area, device, and automation into `.claude-code-hermit/raw/` and compiles durable profiles your next session reloads instantly — the raw/compiled pattern Andrej Karpathy describes for LLM context, inherited from hermit.
+1. **Install and meet your house.** `ha-hatch` a wizard that creates your personal AI assistant, registers the Home Assistant MCP server and seeds `CLAUDE.md`. `ha-refresh-context` then snapshots every entity, area, device, and automation into `.claude-code-hermit/raw/` and compiles durable profiles your next session reloads instantly — the raw/compiled pattern Andrej Karpathy describes for LLM context, inherited from hermit.
 
 2. **Ask for automations in plain language.** `ha-build-automation` drafts YAML in an isolated worktree, simulates it against your inventory, and hands it to `@ha-safety-reviewer`. `ha-apply-change` only reloads Home Assistant after validation and policy checks pass.
 
 3. **Every actuation is pre-screened.** A PreToolUse hook gates the HA MCP server. Locks, alarm panels, and security-related devices are blocked by policy; unresolvable targets (area- or device-only) are blocked by default. Blocked operations don't fail silently — they become **proposals** for your review.
 
-4. **Routines run themselves.** Morning brief, daily context refresh, weekly safety audit, daily integration-health and automation-error checks — registered as hermit `plugin_checks` and dispatched via reflect. Silence means everything's fine.
+4. **Routines run themselves.** Morning brief, daily context refresh, weekly safety audit, daily integration-health and automation-error checks — registered as hermit `plugin_checks` and dispatched via reflect. Silence means everything's fine. Do you want a new routine, just ask and hermit sets it up.
 
 5. **Everything is browsable.** HA sessions, proposals, pattern findings, and cost tracking flow into your hermit Cortex — the Obsidian vault hermit maintains — so your house's history is greppable, linkable, and yours.
 
@@ -55,8 +59,6 @@ claude plugin install claude-code-hermit@claude-code-hermit --scope project
 claude plugin install claude-code-homeassistant-hermit@claude-code-homeassistant-hermit --scope project
 pip install --user PyYAML python-dotenv
 ```
-
-> Developing locally? `claude --plugin-dir /path/to/claude-code-homeassistant-hermit` runs it without installing.
 
 ### 2. Configure
 
