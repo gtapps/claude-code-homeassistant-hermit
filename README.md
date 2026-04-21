@@ -34,7 +34,7 @@ Three steps to a running 24/7 Home Assistant hermit:
 
 **1. Give it your house.** Point it at Home Assistant and the hermit learns your entities, areas, patterns, and automations — your house becomes the context it reasons from.
 
-**2. Talk to it.** Ask what's on, draft an automation, ask why the porch light fired at 3am. Each flow is a skill — the agent reads your inventory, drafts YAML in an isolated worktree, simulates it, and only applies after you approve.
+**2. Talk to it on Discord & Telegram or  remotely.** Ask what's on, draft an automation, ask why the porch light fired at 3am. Each flow is a skill — the agent reads your inventory, drafts YAML in an isolated worktree, simulates it, and only applies after you approve.
 
 **3. It watches the house for you.** Daily and weekly checks run on their own: pattern analysis, automation suggestions, integration health, automation errors, safety re-audit. Anything worth your attention surfaces as a proposal you can act on.
 
