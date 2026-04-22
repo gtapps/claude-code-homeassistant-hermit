@@ -13,7 +13,7 @@ Set up the Home Assistant layer for this project. Idempotent — safe to re-run;
 
 Read `.claude-code-hermit/config.json`.
 
-- If the file is missing or `_hermit_versions["claude-code-hermit"]` is absent or less than `1.0.13`:
+- If the file is missing or `_hermit_versions["claude-code-hermit"]` is absent or less than `1.0.15`:
   - `AskUserQuestion`: "Core hermit is not initialized. Run `/claude-code-hermit:hatch` now?"
   - Yes → invoke `/claude-code-hermit:hatch`, then continue.
   - No → stop and explain what is required.
@@ -149,9 +149,13 @@ Check CLAUDE.md for the marker comment `<!-- claude-code-homeassistant-hermit: H
 
 Write `_hermit_versions["claude-code-homeassistant-hermit"]` into `.claude-code-hermit/config.json` with the current plugin version.
 
-**Reflect routine check**: Read `config.routines` array. If no entry has `"id": "reflect"`, warn:
+**Boot skill registration**: Read `config.boot_skill` from `config.json`.
 
-> "No `reflect` routine found in config.json. Run `/claude-code-hermit:hermit-evolve` to seed it (required for daily pattern tracking in hermit ≥ 1.0.13)."
+The skill name format is `/<plugin-id>:<skill-id>`. Parse the plugin-id as the text between `/` and `:`.
+
+- If `null` or absent → set it to `/claude-code-homeassistant-hermit:ha-boot`.
+- If the value starts with `/claude-code-homeassistant-hermit:` → no-op (report "already set").
+- Otherwise (another plugin's namespace) → leave it unchanged and warn: "boot_skill is already set to `<value>` from another plugin — skipping to avoid conflict. Run `/claude-code-hermit:hermit-settings boot-skill` to update it manually."
 
 **HA routine registration**: `config.routines` is an array of objects with `{id, schedule, skill, enabled, run_during_waiting}`. For each HA routine below, check whether an entry with that `id` already exists in the array. If it does, skip. If not, prompt and merge it in.
 
@@ -167,7 +171,7 @@ Write `_hermit_versions["claude-code-homeassistant-hermit"]` into `.claude-code-
 
 After adding any new entries, remind the operator: "Run `/claude-code-hermit:hermit-routines load` to activate routines in the current session."
 
-**Plugin checks registration**: `config.plugin_checks` is an array of periodic skill entries that reflect invokes on a cadence and funnels through the proposal pipeline. For each entry below, check whether an existing record has the same `id`. If not, append it — no prompt needed, all four are safe read-only analyses.
+**Scheduled checks registration**: `config.scheduled_checks` is an array of periodic skill entries that reflect invokes on a cadence and funnels through the proposal pipeline. For each entry below, check whether an existing record has the same `id`. If not, append it — no prompt needed, all four are safe read-only analyses.
 
 ```json
 {"id": "ha-patterns",            "plugin": "claude-code-homeassistant-hermit", "skill": "claude-code-homeassistant-hermit:ha-analyze-patterns",        "enabled": true, "trigger": "interval", "interval_days": 7}
@@ -197,7 +201,7 @@ hatch complete
   ✓  config.json stamped v<version>
   ✓  boot_skill: /claude-code-homeassistant-hermit:ha-boot (set | already set | operator override preserved)
   ✓  Routines registered: daily-ha-context, morning-brief (disabled by default)
-  ✓  plugin_checks registered: ha-patterns, ha-safety-audit, ha-integration-health, ha-automation-errors
+  ✓  Scheduled checks registered: ha-patterns, ha-safety-audit, ha-integration-health, ha-automation-errors
 
 Manual steps remaining:
   - Enable 'Model Context Protocol Server' integration in Home Assistant (if not done)

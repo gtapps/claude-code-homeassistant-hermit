@@ -1,7 +1,7 @@
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT License" /></a>
   <a href="https://code.claude.com/docs/en/plugins"><img src="https://img.shields.io/badge/Claude%20Code-plugin-orange.svg" alt="Claude Code Plugin" /></a>
-  <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/version-0.0.1-green.svg" alt="Version 0.0.1" /></a>
+  <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/version-0.0.2-green.svg" alt="Version 0.0.2" /></a>
   <img src="https://img.shields.io/badge/Claude-Pro%20%7C%20Max-blueviolet.svg" alt="Claude Pro/Max Compatible" />
 </p>
 
@@ -130,7 +130,7 @@ claude-code-homeassistant-hermit (this plugin)
   ├── src/ha_agent_lab/   Python package (REST client, policy, simulation, apply)
   └── state-templates/    CLAUDE-APPEND.md (injected by hatch)
 
-claude-code-hermit (core, required ≥ 1.0.13)
+claude-code-hermit (core, required ≥ 1.0.15)
   └── Session lifecycle, proposals, reflect, memory, cost tracking
 ```
 

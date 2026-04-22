@@ -1,6 +1,6 @@
 {
   "name": "claude-code-homeassistant-hermit",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Home Assistant layer for claude-code-hermit — skills, subagents, safety hook, and Python CLI for an autonomous HA assistant",
   "author": {
     "name": "gtapps",
@@ -16,7 +16,7 @@
     "gtapps"
   ],
   "requires": {
-    "claude-code-hermit": ">=1.0.13"
+    "claude-code-hermit": ">=1.0.15"
   },
   "hermit": {
     "boot_skill": "/claude-code-homeassistant-hermit:ha-boot"

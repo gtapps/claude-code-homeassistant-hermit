@@ -31,9 +31,9 @@ This project has the `claude-code-homeassistant-hermit` plugin installed. The ru
 | `/claude-code-homeassistant-hermit:ha-analyze-patterns` | Identify patterns and automation opportunities |
 | `/claude-code-homeassistant-hermit:ha-house-status` | Live house status via MCP |
 | `/claude-code-homeassistant-hermit:ha-morning-brief` | Morning brief — live status, overnight anomalies, recommendations |
-| `/claude-code-homeassistant-hermit:ha-safety-audit` | Re-audit live automations against the safety policy (weekly plugin_check) |
-| `/claude-code-homeassistant-hermit:ha-integration-health` | Detect dropped integrations via per-domain unavailable ratios (daily plugin_check) |
-| `/claude-code-homeassistant-hermit:ha-automation-error-review` | Flag automations with recurring errors in HA's log (daily plugin_check) |
+| `/claude-code-homeassistant-hermit:ha-safety-audit` | Re-audit live automations against the safety policy (weekly scheduled_check) |
+| `/claude-code-homeassistant-hermit:ha-integration-health` | Detect dropped integrations via per-domain unavailable ratios (daily scheduled_check) |
+| `/claude-code-homeassistant-hermit:ha-automation-error-review` | Flag automations with recurring errors in HA's log (daily scheduled_check) |
 
 ### Subagents
 
@@ -79,7 +79,7 @@ Requires `.env` at the project root (gitignored):
 - MCP actuation tools are blocked by the safety hook before reaching HA.
 - Explicit operator approval is required before applying automations or modifying safety policy.
 
-### Routines (hermit ≥ 1.0.13)
+### Routines
 
 HA routines (`daily-ha-context`, `morning-brief`) are registered by `hatch`. Run `/claude-code-hermit:hermit-routines load` once per interactive session to activate them. `morning-brief` is disabled by default — flip `enabled: true` in `config.json` once the house profile is confirmed.
 

@@ -1,6 +1,5 @@
 # Claude Code local state (cost logs, stale skill state, settings)
 .claude/cost-log.jsonl
-.claude/skills/
 
 # Node
 node_modules/
