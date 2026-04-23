@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from datetime import date
 from pathlib import Path
 from typing import Any
@@ -52,6 +53,12 @@ def build_parser() -> argparse.ArgumentParser:
         "audit-automations",
         help="Audit all live HA automations against the safety policy (plugin_check entry point).",
     )
+
+    probe_parser = ha_subparsers.add_parser(
+        "probe",
+        help="GET a raw HA REST path and print the JSON response. Useful for verifying endpoints.",
+    )
+    probe_parser.add_argument("path", help="HA REST path, e.g. /api/config/automation/config/1234")
 
     errors_parser = ha_subparsers.add_parser(
         "automation-errors",
@@ -165,6 +172,16 @@ def main(argv: list[str] | None = None) -> int:
             print(str(exc))
             return 1
 
+    if args.command == "ha" and args.ha_command == "probe":
+        try:
+            client = HomeAssistantClient(config)
+            response = client.get(args.path)
+            print(json.dumps(response, indent=2, ensure_ascii=False))
+            return 0
+        except HomeAssistantError as exc:
+            print(f"HA error {exc.status_code}: {str(exc.payload)[:500]}", file=sys.stderr)
+            return 1
+
     if args.command == "ha" and args.ha_command == "validate-apply":
         try:
             client = HomeAssistantClient(config)
@@ -192,16 +209,21 @@ def main(argv: list[str] | None = None) -> int:
 def _print_safety_audit_summary(summary: dict[str, Any]) -> None:
     violations = summary.get("violations", [])
     total = summary.get("total_automations", 0)
+    unmanaged = summary.get("unmanaged", [])
+    fetch_failures = summary.get("fetch_failures", [])
     print(f"ha-safety-audit findings — {date.today().isoformat()}")
     if not violations:
         print(f"No actionable findings. ({total} automations scanned)")
-        return
-    print(f"Policy violations: {len(violations)}")
-    for v in violations:
-        reasons = "; ".join(v.get("reasons", []))
-        print(f"- {v.get('alias')} (`{v.get('id')}`): {reasons}")
-    passed = summary["passed"]
-    print(f"No action needed: {passed} automations passed")
+    else:
+        print(f"Policy violations: {len(violations)}")
+        for v in violations:
+            reasons = "; ".join(v.get("reasons", []))
+            print(f"- {v.get('alias')} (`{v.get('id')}`): {reasons}")
+        print(f"No action needed: {summary['passed']} automations passed")
+    if unmanaged:
+        print(f"Skipped (no numeric id): {len(unmanaged)}")
+    if fetch_failures:
+        print(f"Skipped (404 on config fetch): {len(fetch_failures)}")
 
 
 def _print_automation_errors_summary(summary: dict[str, Any]) -> None:

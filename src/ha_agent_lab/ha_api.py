@@ -1,3 +1,4 @@
+"""Home Assistant REST client. Upstream contract: https://developers.home-assistant.io/docs/api/rest/"""
 from __future__ import annotations
 
 import json

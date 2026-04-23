@@ -33,6 +33,7 @@ After install, run `/claude-code-homeassistant-hermit:hatch` in the target proje
 - Uncertain entities default to sensitive. Blocked work becomes a proposal.
 - Use the stored language from `MEMORY.md` for all user-facing output.
 - Prefer the Python CLI over ad-hoc reasoning when a helper exists.
+- Don't overengineer.
 
 ## MCP vs Python
 
@@ -50,6 +51,7 @@ ${CLAUDE_PLUGIN_ROOT}/bin/ha-agent-lab ha validate-apply <artifact> [--reload au
 ${CLAUDE_PLUGIN_ROOT}/bin/ha-agent-lab ha policy-check <entity_id_or_yaml>
 ${CLAUDE_PLUGIN_ROOT}/bin/ha-agent-lab ha audit-automations
 ${CLAUDE_PLUGIN_ROOT}/bin/ha-agent-lab ha automation-errors [--min-hits N]
+${CLAUDE_PLUGIN_ROOT}/bin/ha-agent-lab ha probe <path>
 ${CLAUDE_PLUGIN_ROOT}/bin/ha-agent-lab boot status [--probe]
 ${CLAUDE_PLUGIN_ROOT}/bin/ha-agent-lab boot store --language <locale> --url <url> [--token <token>]
 .venv/bin/pytest tests/ -v
@@ -96,3 +98,13 @@ Run tests:
 - The safety hook fails closed — if an MCP call's target cannot be resolved to concrete entity IDs, it is blocked.
 - The deny-pattern hook blocks Bash commands whose arguments contain the literal string `TOKEN`. Read credentials via the CLI (`bin/ha-agent-lab boot status`) or via `dotenv`, never `cat .env` / `echo $HOMEASSISTANT_TOKEN`.
 - Agent references in skill instructions must use the full namespaced form (e.g., `claude-code-homeassistant-hermit:ha-safety-reviewer`). Bare names will fail at dispatch.
+
+## HA API references
+
+- REST API: https://developers.home-assistant.io/docs/api/rest/
+- WebSocket API: https://developers.home-assistant.io/docs/api/websocket/
+
+Before changing HA endpoint usage, verify against upstream (WebFetch or the `find-docs` skill) or probe a live instance with `./bin/ha-agent-lab ha probe <path>`. Do not assume an endpoint exists.
+
+Known gotchas:
+- Automations have no bulk REST listing. Enumerate via `/api/states` (filter `domain=automation`), fetch each config via `/api/config/automation/config/{automation_id}`. YAML-packaged automations lack a numeric `id` and are not retrievable via REST (use WebSocket `config/automation/list` for full coverage).
