@@ -70,8 +70,10 @@ In interactive sessions, run `/claude-code-hermit:hermit-routines load` once to 
 
 - `MEMORY.md` (auto-loaded, max 200 lines): language, house profile, learned patterns, known issues.
 - `memory/*.md`: detailed topic files (entities, automation history).
-- `.claude-code-hermit/raw/` — HA context snapshots, normalized data, audits, staged automation YAML.
-- `.claude-code-hermit/compiled/` — durable domain outputs injected at session start.
+- `.claude-code-hermit/raw/` — HA context snapshots, normalized data, audits, staged automation YAML (ephemeral; aged out by retention).
+- `.claude-code-hermit/compiled/` — durable domain outputs (morning briefs, house profile) injected at session start.
+- `.claude-code-hermit/state/` — machine state (runtime, reflection, micro-proposals, alert state).
+- `.claude-code-hermit/proposals/` — PROP-NNN improvement proposals.
 - `.claude-code-hermit/sessions/S-*-REPORT.md` — archived session reports.
 
 ## Development

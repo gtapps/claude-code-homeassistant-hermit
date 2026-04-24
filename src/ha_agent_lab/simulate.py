@@ -7,7 +7,7 @@ from typing import Any
 
 import yaml
 
-from .artifacts import write_markdown_artifact
+from .artifacts import current_session_id, slugify, standard_metadata, write_markdown_artifact
 from .config import normalized_context_path
 from .policy import PolicyDecision, evaluate_references
 
@@ -65,14 +65,20 @@ def load_inventory(root: Path, inventory_path: Path | None = None) -> dict[str, 
 
 
 def write_simulation_report(root: Path, result: SimulationResult) -> Path:
-    metadata = {
-        "artifact_path": str(result.artifact_path.relative_to(root)),
-        "valid": result.is_valid,
-        "referenced_entities": result.referenced_entities,
-        "referenced_services": result.referenced_services,
-        "missing_entities": result.missing_entities,
-        "blocked_reasons": result.blocked_reasons,
-    }
+    metadata = standard_metadata(
+        "simulation",
+        f"Simulation Report — {result.artifact_path.name}",
+        session=current_session_id(root),
+        tags=["simulation", "policy-check"],
+        extra={
+            "artifact_path": str(result.artifact_path.relative_to(root)),
+            "valid": result.is_valid,
+            "referenced_entities": result.referenced_entities,
+            "referenced_services": result.referenced_services,
+            "missing_entities": result.missing_entities,
+            "blocked_reasons": result.blocked_reasons,
+        },
+    )
     body_lines = [
         f"# Simulation Report for `{result.artifact_path.name}`",
         "",
@@ -84,10 +90,11 @@ def write_simulation_report(root: Path, result: SimulationResult) -> Path:
         body_lines.extend(["", "## Missing Entities", *[f"- {item}" for item in result.missing_entities]])
     if result.blocked_reasons:
         body_lines.extend(["", "## Blocked Reasons", *[f"- {item}" for item in result.blocked_reasons]])
+    slug = f"audit-ha-simulation-{slugify(result.artifact_path.stem)}"
     return write_markdown_artifact(
         root,
         ".claude-code-hermit/raw",
-        f"audit-ha-simulation__{result.artifact_path.stem}",
+        slug,
         metadata,
         "\n".join(body_lines),
         latest_name="audit-ha-simulation-latest.md",

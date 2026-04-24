@@ -16,7 +16,7 @@
     "gtapps"
   ],
   "requires": {
-    "claude-code-hermit": ">=1.0.16"
+    "claude-code-hermit": ">=1.0.17"
   },
   "hermit": {
     "boot_skill": "/claude-code-homeassistant-hermit:ha-boot"

@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Any
 
 from .apply import validate_and_apply
-from .artifacts import utc_timestamp, write_json_artifact, write_markdown_artifact
+from .artifacts import current_session_id, standard_metadata, utc_timestamp, write_json_artifact, write_markdown_artifact
 from .boot import boot_status, save_boot_preferences
 from .config import load_config, normalized_context_path
 from .ha_api import HomeAssistantClient, HomeAssistantError
@@ -283,15 +283,17 @@ def refresh_context(root: Path, client: HomeAssistantClient) -> dict[str, Any]:
         root,
         ".claude-code-hermit/raw",
         "audit-ha-context-refresh",
-        {
-            "title": f"HA Context Refresh — {utc_timestamp()}",
-            "type": "audit",
-            "created": utc_timestamp(),
-            "source": "routine",
-            "tags": ["ha-context", "refresh"],
-            "entity_count": len(normalized["entity_index"]),
-            "service_domain_count": len(normalized["service_index"]),
-        },
+        standard_metadata(
+            "audit",
+            "HA Context Refresh",
+            session=current_session_id(root),
+            tags=["ha-context", "refresh"],
+            extra={
+                "source": "routine",
+                "entity_count": len(normalized["entity_index"]),
+                "service_domain_count": len(normalized["service_index"]),
+            },
+        ),
         "\n".join(
             [
                 "# Home Assistant Context Refresh",
@@ -371,19 +373,21 @@ def refresh_context_incremental(
         root,
         ".claude-code-hermit/raw",
         "audit-ha-context-refresh",
-        {
-            "title": f"HA Context Refresh (incremental) — {utc_timestamp()}",
-            "type": "audit",
-            "created": utc_timestamp(),
-            "source": "routine",
-            "tags": ["ha-context", "refresh", "incremental"],
-            "mode": "incremental",
-            "entity_count": len(merged_index),
-            "added": len(added),
-            "removed": len(removed),
-            "changed": len(changed),
-            "unavailable": len(unavailable_entities),
-        },
+        standard_metadata(
+            "audit",
+            "HA Context Refresh (incremental)",
+            session=current_session_id(root),
+            tags=["ha-context", "refresh", "incremental"],
+            extra={
+                "source": "routine",
+                "mode": "incremental",
+                "entity_count": len(merged_index),
+                "added": len(added),
+                "removed": len(removed),
+                "changed": len(changed),
+                "unavailable": len(unavailable_entities),
+            },
+        ),
         "\n".join(
             [
                 "# Home Assistant Context Refresh (incremental)",

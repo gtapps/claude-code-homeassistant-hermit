@@ -50,6 +50,20 @@ Before doing any work, read `.claude-code-hermit/state/runtime.json` if it exist
 
 8. **Compose brief** — Write a concise morning brief in the operator's language (from OPERATOR.md preferences). Use the format below.
 
+9. **Write to `compiled/`** — Write the composed brief to `.claude-code-hermit/compiled/brief-morning-<YYYY-MM-DD>.md` with frontmatter:
+   ```yaml
+   title: "Morning Brief — <YYYY-MM-DD>"
+   type: brief
+   created: <ISO8601>
+   session: <session_id from runtime.json, or null if absent>
+   tags: [morning-brief, ha]
+   ```
+   Then append the following line to `.claude-code-hermit/sessions/SHELL.md` under a `### Artifacts produced this session` subsection in `## Monitoring` (create the subsection if absent):
+   ```
+   - [[compiled/brief-morning-<YYYY-MM-DD>]]
+   ```
+   This citation is lifted into `## Artifacts` when `/claude-code-hermit:session-close` archives the session.
+
 ## Output Format
 
 ```

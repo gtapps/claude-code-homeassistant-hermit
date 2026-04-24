@@ -24,7 +24,7 @@ allowed-tools:
    - Energy consumption patterns
    - Entities stuck in unavailable/unknown
    - Automation opportunities based on correlated state changes
-5. **Write findings**: Save to `.claude-code-hermit/raw/` as `<timestamp>__snapshot-ha-pattern-analysis.json` and update `snapshot-ha-pattern-analysis-latest.json`.
+5. **Write findings**: Save pattern data to `.claude-code-hermit/raw/snapshot-ha-pattern-analysis-<YYYY-MM-DD>.json` and update `snapshot-ha-pattern-analysis-latest.json`. Write the curated Markdown summary (when non-trivial findings exist) to `.claude-code-hermit/raw/patterns-<YYYY-MM-DD>.md` with frontmatter `type: analysis`, `title: "HA Pattern Analysis — <YYYY-MM-DD>"`, `created: <ISO8601>`, `session: <session_id or null>`, `tags: [ha-patterns, analysis]`. Also write `patterns-latest.md` pointing to the same content.
 6. **Update memory**:
    - Update `MEMORY.md` Learned Patterns section with key findings.
    - If findings are extensive, write details to `memory/house-entities.md`.
@@ -56,6 +56,8 @@ allowed-tools:
 
 ## Output
 
-- `.claude-code-hermit/raw/<timestamp>__snapshot-ha-pattern-analysis.json`
-- `.claude-code-hermit/compiled/<timestamp>__pattern-analysis.md` (curated summary, written when non-trivial findings exist)
+- `.claude-code-hermit/raw/snapshot-ha-pattern-analysis-<date>.json` (raw pattern data, machine-readable)
+- `.claude-code-hermit/raw/snapshot-ha-pattern-analysis-latest.json` (fixed-name alias for latest)
+- `.claude-code-hermit/raw/patterns-<date>.md` (curated Markdown summary, written when non-trivial findings exist; `type: analysis`)
+- `.claude-code-hermit/raw/patterns-latest.md` (fixed-name alias for latest)
 - Updated `MEMORY.md` Learned Patterns section

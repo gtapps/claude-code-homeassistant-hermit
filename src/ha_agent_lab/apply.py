@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
-from .artifacts import write_markdown_artifact
+from .artifacts import current_session_id, slugify, standard_metadata, write_markdown_artifact
 from .ha_api import HomeAssistantClient, HomeAssistantError
 from .policy import can_reload_domain
 from .simulate import SimulationResult, simulate_artifact
@@ -95,14 +95,20 @@ def _write_apply_report(
     reload_domain: str | None,
     message: str,
 ) -> Path:
-    metadata = {
-        "artifact_path": str(artifact_path.relative_to(root)),
-        "config_check_ok": config_check_ok,
-        "reload_attempted": reload_attempted,
-        "reload_domain": reload_domain,
-        "simulation_valid": simulation.is_valid,
-        "message": message,
-    }
+    metadata = standard_metadata(
+        "apply",
+        f"Apply Report — {artifact_path.name}",
+        session=current_session_id(root),
+        tags=["apply", "ha-automation"],
+        extra={
+            "artifact_path": str(artifact_path.relative_to(root)),
+            "config_check_ok": config_check_ok,
+            "reload_attempted": reload_attempted,
+            "reload_domain": reload_domain,
+            "simulation_valid": simulation.is_valid,
+            "message": message,
+        },
+    )
     body = "\n".join(
         [
             f"# Apply Report for `{artifact_path.name}`",
@@ -115,10 +121,11 @@ def _write_apply_report(
             f"Message: {message}",
         ]
     )
+    slug = f"audit-ha-apply-{slugify(artifact_path.stem)}"
     return write_markdown_artifact(
         root,
         ".claude-code-hermit/raw",
-        f"audit-ha-apply__{artifact_path.stem}",
+        slug,
         metadata,
         body,
         latest_name="audit-ha-apply-latest.md",

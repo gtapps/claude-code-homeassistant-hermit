@@ -23,9 +23,13 @@ def load_frontmatter(path: Path) -> tuple[dict[str, Any], str]:
     return metadata, body
 
 
-def dump_frontmatter(path: Path, metadata: dict[str, Any], body: str) -> None:
+def render_frontmatter(metadata: dict[str, Any], body: str) -> str:
     serialized = yaml.safe_dump(metadata, sort_keys=False, allow_unicode=False).strip()
-    text = f"---\n{serialized}\n---\n{body.rstrip()}\n"
+    return f"---\n{serialized}\n---\n{body.rstrip()}\n"
+
+
+def dump_frontmatter(path: Path, metadata: dict[str, Any], body: str) -> None:
+    text = render_frontmatter(metadata, body)
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(text, encoding="utf-8")
 

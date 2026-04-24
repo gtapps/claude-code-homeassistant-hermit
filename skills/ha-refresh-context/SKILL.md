@@ -21,9 +21,11 @@ allowed-tools:
 
 ## Output
 
-- `.claude-code-hermit/raw/snapshot-ha-context-latest.json` — raw HA API snapshot
-- `.claude-code-hermit/raw/snapshot-ha-normalized-latest.json` — processed entity/service index
-- `.claude-code-hermit/raw/audit-ha-context-refresh-latest.md` — audit entry
+- `.claude-code-hermit/raw/snapshot-ha-context-<date>.json` + `snapshot-ha-context-latest.json` — raw HA API snapshot
+- `.claude-code-hermit/raw/snapshot-ha-normalized-latest.json` — processed entity/service index (fixed name)
+- `.claude-code-hermit/raw/audit-ha-context-refresh-<date>.md` + `audit-ha-context-refresh-latest.md` — audit entry
+
+**House profile (first run or when profile changes):** if new areas, domains, or significant entity changes are observed in step 5, write a durable house profile summary to `.claude-code-hermit/compiled/context-house-profile-<YYYY-MM-DD>.md` with frontmatter `type: context`, `foundational: true`, `title: "House Profile — <date>"`, `created: <ISO8601>`, `session: <session_id or null>`, `tags: [ha-context, house-profile]`. Append `[[compiled/context-house-profile-<date>]]` to SHELL.md `### Artifacts produced this session` under `## Monitoring`.
 
 ## When to Use
 

@@ -5,7 +5,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from typing import Any
 
-from .artifacts import utc_timestamp, write_json_artifact, write_markdown_artifact
+from .artifacts import current_session_id, standard_metadata, write_json_artifact, write_markdown_artifact
 from .ha_api import HomeAssistantClient, HomeAssistantError
 from .policy import evaluate_references
 from .simulate import collect_references
@@ -103,20 +103,21 @@ def audit_automations(root: Path, client: HomeAssistantClient) -> dict[str, Any]
             for reason in v["reasons"]:
                 body_lines.append(f"  - {reason}")
 
-    ts = utc_timestamp()
     write_markdown_artifact(
         root,
         ".claude-code-hermit/raw",
         "audit-ha-safety",
-        {
-            "title": f"HA Safety Audit — {ts}",
-            "type": "audit",
-            "created": ts,
-            "source": "plugin-check",
-            "tags": ["ha-safety", "audit", "policy-drift"],
-            "total_automations": total_automations,
-            "violations": len(violations),
-        },
+        standard_metadata(
+            "audit",
+            "HA Safety Audit",
+            session=current_session_id(root),
+            tags=["ha-safety", "audit", "policy-drift"],
+            extra={
+                "source": "scheduled-check",
+                "total_automations": total_automations,
+                "violations": len(violations),
+            },
+        ),
         "\n".join(body_lines),
         latest_name="audit-ha-safety-latest.md",
     )
@@ -168,20 +169,21 @@ def review_automation_errors(root: Path, client: HomeAssistantClient, min_hits: 
         for item in flagged:
             body_lines.append(f"- `{item['entity_id']}` — {item['count']} error-pattern hits")
 
-    ts = utc_timestamp()
     write_markdown_artifact(
         root,
         ".claude-code-hermit/raw",
         "audit-ha-automation-errors",
-        {
-            "title": f"HA Automation Errors — {ts}",
-            "type": "audit",
-            "created": ts,
-            "source": "plugin-check",
-            "tags": ["ha-automation", "errors", "review"],
-            "min_hits": min_hits,
-            "flagged": len(flagged),
-        },
+        standard_metadata(
+            "audit",
+            "HA Automation Errors",
+            session=current_session_id(root),
+            tags=["ha-automation", "errors", "review"],
+            extra={
+                "source": "scheduled-check",
+                "min_hits": min_hits,
+                "flagged": len(flagged),
+            },
+        ),
         "\n".join(body_lines),
         latest_name="audit-ha-automation-errors-latest.md",
     )
