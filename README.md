@@ -5,6 +5,24 @@
   <img src="https://img.shields.io/badge/Claude-Pro%20%7C%20Max-blueviolet.svg" alt="Claude Pro/Max Compatible" />
 </p>
 
+> ⚠️ **This repository has moved to [gtapps/claude-code-hermit](https://github.com/gtapps/claude-code-hermit).**
+>
+> Existing installations continue working transparently — this marketplace's `marketplace.json` redirects to the monorepo via `git-subdir`. To pick up the latest:
+>
+> ```
+> /plugin marketplace update
+> /plugin update
+> ```
+>
+> **New installations should add the new marketplace directly:**
+>
+> ```
+> claude plugin marketplace add gtapps/claude-code-hermit
+> claude plugin install claude-code-homeassistant-hermit@claude-code-hermit
+> ```
+>
+> Pinned to a specific tag (e.g. `@v-final-standalone`)? You stay frozen at the standalone version and won't auto-track the monorepo until you reinstall.
+
 # claude-code-homeassistant-hermit
 
 Turn Claude Code into a 24/7 personal AI assistant for your Home Assistant.
